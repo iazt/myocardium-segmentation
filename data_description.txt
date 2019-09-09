@@ -1,0 +1,23 @@
+Esta base de datos es una versión preprocesada de la combinación entre las siguientes bases de datos de MRI del corazón:
+
+1. ACDC 
+https://acdc.creatis.insa-lyon.fr/#challenge/5846c3366a3c7735e84b67ec
+100 sujetos con marcas en los instantes ED (end diastolic) y ES (end systolic).
+
+2. York
+http://www.cse.yorku.ca/~mridataset/
+33 sujetos con marcas en todos los instantes.
+
+El preprocesamiento consistió en la normalización de los pixeles, y normalización del tamaño de la imagen a 256x256 mediante zero-padding en caso de ser necesario.
+
+La base de datos se encuentra divida en train, val, y test, que no comparten sujetos entre sí, y los tres conjuntos poseen sujetos tanto de ACDC como de York.
+
+El formato de los archivos es el siguiente:
+
+<set_name>_imgs.npy: Numpy array con dimensiones (n_images, height, width), donde n_images es el numero de imagenes del set, y (height, width) es una imagen en escala de grises de la resonancia magnética del corazón de 256x256, cuyos píxeles están en el rango (0, 255) con dtype uint8 (unsigned integer 8 bits).
+
+<set_name>_annot.npy: Numpy array con dimensiones (n_images, height, width), donde n_images es el numero de imagenes del set, y (height, width) es una máscara de segmentación del ventrículo izquierdo (LV) asociada a la imagen en <set_name>_imgs.npy, de 256x256 con dtype uint8 (unsigned integer 8 bits), cuyos pixeles pueden valer 0, 1, o 2 representando las siguientes clases:
+0: Fondo 
+1: Miocardio (tejido entre el contorno del epicardio del LV y endocardio del LV)
+2: Endocardio del LV
+
