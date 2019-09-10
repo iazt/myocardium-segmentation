@@ -1,6 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+"""
+Little script for first data visualization of ACDC and York Database
+"""
+
 
 img_data = np.load('/Users/rudy/Documents/myocardium/resources/val_imgs.npy')
 ann_data = np.load('/Users/rudy/Documents/myocardium/resources/val_annot.npy')
@@ -23,7 +27,7 @@ for i in range(2):
         axs[i][j].imshow(img_data[idxs[i][j], :, :])
 plt.show()
 
-mask_visualization = False
+mask_visualization = True
 
 if mask_visualization:
 
@@ -42,7 +46,7 @@ if mask_visualization:
     # Draw the segmentation into the image
     img_without_background = selected_img.copy()
     selected_img[ann_data[n_img, :, :] == 1] = 255
-    selected_img[ann_data[n_img, :, :] == 2] = 122
+    selected_img[ann_data[n_img, :, :] == 2] = 50
     img_without_background[ann_data[n_img, :, :] == 0] = 0
 
     fig2, axs = plt.subplots(2, 2, figsize=(12, 12), sharex='col', sharey='row')
