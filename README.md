@@ -3,4 +3,4 @@ Proyecto del curso EL4106-Inteligencia Computacional de la Universidad de Chile.
 
 Semestre primavera 2019.
 
-Integrantes: Rudy García, Ignacio Zurita T.
+Integrantes: Rudy García A., Ignacio Zurita T.
