@@ -24,7 +24,7 @@ idxs = np.random.randint(0, total_imgs, size=(2, 2))
 for i in range(2):
     for j in range(2):
         axs[i][j].set(title="Img {} {}x{}".format(idxs[i][j], width, height))
-        axs[i][j].imshow(img_data[idxs[i][j], :, :])
+        axs[i][j].imshow(img_data[idxs[i][j], :, :], cmap='Greys')
 plt.show()
 
 mask_visualization = True
