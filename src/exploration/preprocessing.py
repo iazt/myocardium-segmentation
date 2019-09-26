@@ -22,4 +22,5 @@ def preprocessing(X,y):
     horizontal_flip=True)
     
 
-    return datagen.fit(X)
+    datagen.fit(X)
+    return datagen
