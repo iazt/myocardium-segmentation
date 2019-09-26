@@ -44,6 +44,8 @@ callback_checkpoint = ModelCheckpoint(
     save_best_only=True)
 tensorboard_callback = TensorBoard(log_dir=LOG_DIR)
 
+csv_logger = CSVLogger(directory+'training.log')
+
 # Loading the weights
 model.load_weights(model_filename)
 
@@ -75,7 +77,7 @@ if keep_training:
         ))
     # Training the model
     result = model.fit_generator(train_gen, epochs=epochs, steps_per_epoch=steps_per_epoch, validation_data=(x_val, y_val),
-                                 callbacks=[callback_checkpoint, tensorboard_callback],
+                                 callbacks=[callback_checkpoint, tensorboard_callback,csv_logger],
                                  use_multiprocessing=True)
     plot_segm_history(result)
 
