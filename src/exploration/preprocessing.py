@@ -9,9 +9,8 @@ import tensorflow as tf
 
 
 def preprocessing(X,y): 
-    a = (y==2)
-    a = -np.asarray(a,dtype=int)*2
-    y = a+y
+    
+    y = y-np.asarray((y==2),dtype=int)*2
     
     X_shape = X.shape
     X = X.reshape(X_shape[0],X_shape[1],X_shape[2],1)
