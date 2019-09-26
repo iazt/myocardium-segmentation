@@ -13,46 +13,57 @@ class VggUnet(tf.keras.Model):
         # Getting the VGG Model
         self._build(input_height, input_width)
 
+    def call(self, inputs):
+        # Define your forward pass here,
+        # using layers you previously defined (in `__init__`).
+        x = self.dense_1(inputs)
+        return self.dense_2(x)
+
+    def compute_output_shape(self, input_shape):
+        # You need to override this function if you want to use the subclassed model
+        # as part of a functional-style model.
+        # Otherwise, this method is optional.
+        shape = tf.TensorShape(input_shape).as_list()
+        shape[-1] = self.num_classes
+        return tf.TensorShape(shape)
+
     def _build(self, input_height, input_width):
 
-        l1_skip_conn = True
+        IMAGE_ORDERING = 'channels_last'
         MERGE_AXIS = -1
-        # Builds the U-Net since the VGG architecture
-        model, levels = get_vgg_encoder(input_height=input_height, input_width=input_width)
+        l1_skip_conn = False
+
+        img_input, levels = get_vgg_encoder(input_height=input_height, input_width=input_width)
         [f1, f2, f3, f4, f5] = levels
 
-        # First u-net block
-        model.add(tf.keras.layers.ZeroPadding2D((1, 1)))
-        model.add(tf.keras.layers.Conv2D(512, (3, 3), padding='valid'))
-        model.add(tf.keras.layers.BatchNormalization())
+        o = f4
+        o = (tf.keras.layers.ZeroPadding2D((1, 1), data_format=IMAGE_ORDERING))(o)
+        o = (tf.keras.layers.Conv2D(512, (3, 3), padding='valid', data_format=IMAGE_ORDERING))(o)
+        o = (tf.keras.layers.BatchNormalization())(o)
 
-        # Second u-net block
-        to_concatenate = tf.keras.layers.UpSampling2D((2, 2))
-        model.add(to_concatenate)
-        model.add(tf.keras.layers.concatenate(input=[to_concatenate, f3]))
-        model.add(tf.keras.layers.ZeroPadding2D((1, 1)))
-        model.add(tf.keras.layers.Conv2D(256, (3, 3), padding='valid'))
-        model.add(tf.keras.layers.BatchNormalization())
+        o = (tf.keras.layers.UpSampling2D((2, 2), data_format=IMAGE_ORDERING))(o)
+        o = (tf.keras.layers.concatenate([o, f3], axis=MERGE_AXIS))
+        o = (tf.keras.layers.ZeroPadding2D((1, 1), data_format=IMAGE_ORDERING))(o)
+        o = (tf.keras.layers.Conv2D(256, (3, 3), padding='valid', data_format=IMAGE_ORDERING))(o)
+        o = (tf.keras.layers.BatchNormalization())(o)
 
-        # Third u-net layer
-        to_concatenate = tf.keras.layers.UpSampling2D((2, 2))
-        model.add(to_concatenate)
-        model.add(tf.keras.layers.concatenate([to_concatenate, f2], axis=MERGE_AXIS))
-        model.add(tf.keras.layers.ZeroPadding2D((1, 1)))
-        model.add(tf.keras.layers.Conv2D(128, (3, 3), padding='valid'))
-        model.add(tf.keras.layers.BatchNormalization())
-        to_concatenate = tf.keras.layers.UpSampling2D((2, 2))
-        model.add(to_concatenate)
+        o = (tf.keras.layers.UpSampling2D((2, 2), data_format=IMAGE_ORDERING))(o)
+        o = (tf.keras.layers.concatenate([o, f2], axis=MERGE_AXIS))
+        o = (tf.keras.layers.ZeroPadding2D((1, 1), data_format=IMAGE_ORDERING))(o)
+        o = (tf.keras.layers.Conv2D(128, (3, 3), padding='valid', data_format=IMAGE_ORDERING))(o)
+        o = (tf.keras.layers.BatchNormalization())(o)
+
+        o = (tf.keras.layers.UpSampling2D((2, 2), data_format=IMAGE_ORDERING))(o)
 
         if l1_skip_conn:
-            model.add(tf.keras.layers.concatenate([to_concatenate, f1], axis=MERGE_AXIS))
+            o = (tf.keras.layers.concatenate([o, f1], axis=MERGE_AXIS))
 
-        model.add(tf.keras.layers.ZeroPadding2D((1, 1)))
-        model.add(tf.keras.layers.Conv2D(64, (3, 3), padding='valid'))
-        model.add(tf.keras.layers.BatchNormalization())
-        model.add(tf.keras.layers.Conv2D(self.num_classes, (3, 3), padding='same'))
+        o = (tf.keras.layers.ZeroPadding2D((1, 1), data_format=IMAGE_ORDERING))(o)
+        o = (tf.keras.layers.Conv2D(64, (3, 3), padding='valid', data_format=IMAGE_ORDERING))(o)
+        o = (tf.keras.layers.BatchNormalization())(o)
 
-        self.model = model
+        o = tf.keras.layers.Conv2D(self.num_classes, (3, 3), padding='same', data_format=IMAGE_ORDERING)(o)
+        self.model = tf.keras.Model(img_input, o)
 
-model = VggUnet(224, 224)
+model = VggUnet(224, 224).model
 
