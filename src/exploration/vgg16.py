@@ -1,9 +1,8 @@
 import tensorflow as tf
-import keras
 pretrained_url = "https://github.com/fchollet/deep-learning-models/releases/download/v0.1/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5"
 
 
-def get_vgg_encoder(input_height=224, input_width=224, pretrained='imagenetasd'):
+def get_vgg_encoder(input_height=224, input_width=224, input_depth=3, pretrained='imagenet'):
     """
     It creates the VGG 16 model using Keras. By default the weights are loaded into the model for transfer learning.
     :param input_height:                        Input image height (int)
@@ -16,7 +15,7 @@ def get_vgg_encoder(input_height=224, input_width=224, pretrained='imagenetasd')
     assert input_width % 32 == 0
 
     IMAGE_ORDERING = 'channels_last'
-    img_input = tf.keras.layers.Input(shape=(input_height, input_width, 3))
+    img_input = tf.keras.layers.Input(shape=(input_height, input_width, input_depth))
 
     x = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same', name='block1_conv1', data_format=IMAGE_ORDERING)(
         img_input)
@@ -51,7 +50,6 @@ def get_vgg_encoder(input_height=224, input_width=224, pretrained='imagenetasd')
     f5 = x
 
     if pretrained == 'imagenet':
-        VGG_Weights_path = keras.utils.get_file(pretrained_url.split("/")[-1], pretrained_url)
-        tf.keras.Model(img_input, x).load_weights(VGG_Weights_path)
+        tf.keras.Model(img_input, x).load_weights(r'\Users\Rudy\PycharmProjects\myocardium-segmentation\resources\vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5')
 
     return img_input, [f1, f2, f3, f4, f5]
