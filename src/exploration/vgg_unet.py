@@ -4,13 +4,13 @@ import tensorflow as tf
 import numpy as np
 from src.exploration.vgg16 import get_vgg_encoder
 from src.exploration.utils import *
+from src.exploration.preprocessing import preprocessing
 from keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 
 
-class VggUnet(tf.keras.Model):
+class VggUnet:
 
     def __init__(self, input_height, input_width, num_classes=10):
-        super(VggUnet, self).__init__(name='Vgg16-unet')
         self.num_classes = num_classes
 
         # Getting the VGG Model
@@ -21,12 +21,12 @@ class VggUnet(tf.keras.Model):
 
         directory = r'\Users\Rudy\PycharmProjects\myocardium-segmentation\resources'
         print("Loading data from {} ...".format(directory))
-        self.img_train_data = np.load(directory + r'\train_imgs.npy').astype('float32')
-        self.annot_train_data = np.load(directory + r'\train_annot.npy').astype('float32')
-        self.img_val_data = np.load(directory + r'\val_imgs.npy').astype('float32')
-        self.annot_val_data = np.load(directory + r'\val_annot.npy').astype('float32')
-        self.img_test_data = np.load(directory + r'\test_imgs.npy').astype('float32')
-        self.annot_test_data = np.load(directory + r'\test_annot.npy').astype('float32')
+        self.img_train_data = np.load(directory + r'\train_imgs_v2.npy').astype('float32')
+        self.annot_train_data = np.load(directory + r'\train_annot_v2.npy').astype('float32')
+        self.img_val_data = np.load(directory + r'\val_imgs_v2.npy').astype('float32')
+        self.annot_val_data = np.load(directory + r'\val_annot_v2.npy').astype('float32')
+        self.img_test_data = np.load(directory + r'\test_imgs_v2.npy').astype('float32')
+        self.annot_test_data = np.load(directory + r'\test_annot_v2.npy').astype('float32')
         print("Data loaded!")
 
     def _build(self, input_height, input_width):
@@ -71,20 +71,11 @@ class VggUnet(tf.keras.Model):
         o = (tf.keras.layers.Conv2D(3, (1, 1), activation='softmax', padding='same', data_format=IMAGE_ORDERING))(o)
 
         # Creates the final block model
-        vgg_unet_model = tf.keras.Model(img_input, o)
-        # output_shape = vgg_unet_model.output_shape
-        # input_shape = vgg_unet_model.input_shape
-        # n_classes = output_shape[3]
-        # model = tf.keras.Model(img_input, o)
-        # model.output_width = output_shape[2]
-        # model.output_height = output_shape[1]
-        # model.n_classes = n_classes
-        # model.input_height = input_shape[1]
-        # model.input_width = input_shape[2]
-        # model.model_name = "VGG16-UNET"
+        vgg_unet_model = tf.keras.Model(img_input, o, name="VGG-UNET")
+        vgg_unet_model.summary()
+        vgg_unet_model.compile(optimizer='adam', loss=jaccard_distance_loss, metrics=[dice_coef])
         self.model = vgg_unet_model
-        self.model.summary()
-        self.model.compile(optimizer='adam', loss=jaccard_distance_loss, metrics=[dice_coef])
+        self.input_ref = img_input
 
     def train(self, epochs, early_stopper, patience_lr, model_name):
         early_stopper = EarlyStopping(patience=early_stopper, verbose=1)
