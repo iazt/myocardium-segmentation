@@ -35,6 +35,7 @@ class VggUnet(tf.keras.Model):
         MERGE_AXIS = -1
         l1_skip_conn = True
 
+        # We generate our vgg model
         img_input, levels = get_vgg_encoder(input_height=input_height, input_width=input_width)
         [f1, f2, f3, f4, f5] = levels
 
