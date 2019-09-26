@@ -1,7 +1,8 @@
 import tensorflow as tf
+pretrained_url = "https://github.com/fchollet/deep-learning-models/releases/download/v0.1/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5"
 
 
-def get_vgg_encoder(input_height=224, input_width=224, pretrained='imagenet'):
+def get_vgg_encoder(input_height=224, input_width=224, input_depth=3, pretrained='imagenet'):
     """
     It creates the VGG 16 model using Keras. By default the weights are loaded into the model for transfer learning.
     :param input_height:                        Input image height (int)
@@ -10,46 +11,45 @@ def get_vgg_encoder(input_height=224, input_width=224, pretrained='imagenet'):
                                                 learning wont be used.
     :return:
     """
-    vgg16 = tf.keras.Sequential([])
-    vgg16.add(tf.keras.layers.Input(shape=(input_height, input_width, 3)))
+    assert input_height % 32 == 0
+    assert input_width % 32 == 0
 
-    # Block1
-    vgg16.add(tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same', name='block1_conv1'))
-    vgg16.add(tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same', name='block1_conv2'))
-    f1 = tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2), name='block1_pool')
-    vgg16.add(f1)
+    IMAGE_ORDERING = 'channels_last'
+    img_input = tf.keras.layers.Input(shape=(input_height, input_width, input_depth))
 
+    x = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same', name='block1_conv1',
+                               data_format=IMAGE_ORDERING, trainable=False)(img_input)
+    x = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same', name='block1_conv2', data_format=IMAGE_ORDERING, trainable=False)(x)
+    x = tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2), name='block1_pool', data_format=IMAGE_ORDERING, trainable=False)(x)
+    f1 = x
     # Block 2
-    vgg16.add(tf.keras.layers.Conv2D(128, (3, 3), activation='relu', padding='same', name='block2_conv1'))
-    vgg16.add(tf.keras.layers.Conv2D(128, (3, 3), activation='relu', padding='same', name='block2_conv2'))
-    f2 = tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2), name='block2_pool')
-    vgg16.add(f2)
+    x = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', padding='same', name='block2_conv1', data_format=IMAGE_ORDERING, trainable=False)(x)
+    x = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', padding='same', name='block2_conv2', data_format=IMAGE_ORDERING, trainable=False)(x)
+    x = tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2), name='block2_pool', data_format=IMAGE_ORDERING, trainable=False)(x)
+    f2 = x
 
     # Block 3
-    vgg16.add(tf.keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same', name='block3_conv1'))
-    vgg16.add(tf.keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same', name='block3_conv2'))
-    vgg16.add(tf.keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same', name='block3_conv3'))
-    f3 = tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2), name='block3_pool')
-    vgg16.add(f3)
+    x = tf.keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same', name='block3_conv1', data_format=IMAGE_ORDERING, trainable=False)(x)
+    x = tf.keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same', name='block3_conv2', data_format=IMAGE_ORDERING, trainable=False)(x)
+    x = tf.keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same', name='block3_conv3', data_format=IMAGE_ORDERING, trainable=False)(x)
+    x = tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2), name='block3_pool', data_format=IMAGE_ORDERING, trainable=False)(x)
+    f3 = x
 
     # Block 4
-    vgg16.add(tf.keras.layers.Conv2D(512, (3, 3), activation='relu', padding='same', name='block4_conv1'))
-    vgg16.add(tf.keras.layers.Conv2D(512, (3, 3), activation='relu', padding='same', name='block4_conv2'))
-    vgg16.add(tf.keras.layers.Conv2D(512, (3, 3), activation='relu', padding='same', name='block4_conv3'))
-    f4 = tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2), name='block4_pool')
-    vgg16.add(f4)
+    x = tf.keras.layers.Conv2D(512, (3, 3), activation='relu', padding='same', name='block4_conv1', data_format=IMAGE_ORDERING, trainable=False)(x)
+    x = tf.keras.layers.Conv2D(512, (3, 3), activation='relu', padding='same', name='block4_conv2', data_format=IMAGE_ORDERING, trainable=False)(x)
+    x = tf.keras.layers.Conv2D(512, (3, 3), activation='relu', padding='same', name='block4_conv3', data_format=IMAGE_ORDERING, trainable=False)(x)
+    x = tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2), name='block4_pool', data_format=IMAGE_ORDERING, trainable=False)(x)
+    f4 = x
 
     # Block 5
-    vgg16.add(tf.keras.layers.Conv2D(512, (3, 3), activation='relu', padding='same', name='block5_conv1'))
-    vgg16.add(tf.keras.layers.Conv2D(512, (3, 3), activation='relu', padding='same', name='block5_conv2'))
-    vgg16.add(tf.keras.layers.Conv2D(512, (3, 3), activation='relu', padding='same', name='block5_conv3'))
-    f5 = tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2), name='block5_pool')
-    vgg16.add(f5)
+    x = tf.keras.layers.Conv2D(512, (3, 3), activation='relu', padding='same', name='block5_conv1', data_format=IMAGE_ORDERING, trainable=False)(x)
+    x = tf.keras.layers.Conv2D(512, (3, 3), activation='relu', padding='same', name='block5_conv2', data_format=IMAGE_ORDERING, trainable=False)(x)
+    x = tf.keras.layers.Conv2D(512, (3, 3), activation='relu', padding='same', name='block5_conv3', data_format=IMAGE_ORDERING, trainable=False)(x)
+    x = tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2), name='block5_pool', data_format=IMAGE_ORDERING, trainable=False)(x)
+    f5 = x
 
-    #if pretrained == 'imagenet':
-    #    VGG_Weights_path = keras.utils.get_file(weights_url.split("/")[-1], weights_url)
-    #    Model(img_input, x).load_weights(VGG_Weights_path)
+    if pretrained == 'imagenet':
+        tf.keras.Model(img_input, x).load_weights(r'\Users\Rudy\PycharmProjects\myocardium-segmentation\resources\vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5')
 
-    return vgg16, [f1, f2, f3, f4, f5]
-
-vgg, layers = get_vgg_encoder()
+    return img_input, [f1, f2, f3, f4, f5]
