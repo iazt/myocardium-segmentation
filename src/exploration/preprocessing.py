@@ -19,7 +19,8 @@ def preprocessing(X,y):
     rotation_range=20,
     width_shift_range=0.2,
     height_shift_range=0.2,
-    horizontal_flip=True)
+    horizontal_flip=True,
+    vertical_flip= True)
     
 
     datagen.fit(X)
