@@ -8,11 +8,15 @@ from keras.preprocessing.image import ImageDataGenerator
 import tensorflow as tf
 
 
-def preprocessing(X): 
-    X_shape=X.shape
-    X=X.reshape(X_shape[0],X_shape[1],X_shape[2],1)
+def preprocessing(X,y): 
+    a = (y==2)
+    a = -np.asarray(a,dtype=int)*2
+    y = a+y
     
-    X=tf.image.resize_images(X,
+    X_shape = X.shape
+    X = X.reshape(X_shape[0],X_shape[1],X_shape[2],1)
+    
+    X = tf.image.resize_images(X,
                       size=[224,224])
     
-    return tf.concat([X,X,X],axis=3)
+    return tf.concat([X,X,X],axis=3), y
