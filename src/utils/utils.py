@@ -1,47 +1,21 @@
-import tensorflow as tf
 import numpy as np
+import matplotlib.pyplot as plt
+import keras as K
+import tensorflow as tf
 
-"""
-This script transform a tensor of images from gray scale to RGB repeating the gray values in each RGB channel.
-"""
-
-output_postfix = '_v256_3'
-
-input_paths = [
-    r'C:\Users\Rudy\PycharmProjects\myocardium-segmentation\resources\data\train_imgs.npy',
-    r'C:\Users\Rudy\PycharmProjects\myocardium-segmentation\resources\data\val_imgs.npy',
-    r'C:\Users\Rudy\PycharmProjects\myocardium-segmentation\resources\data\test_imgs.npy'
-]
-
-
-def get_folder_and_name(path):
-
-    separator = "\\"
-    s = path.split(separator)
-    directory = "\\".join(s[:-1])
-    name = s[-1].split(".")[0]
-    return directory, name
-
-
-for path in input_paths:
-    data = np.load(path)
-    data.resize((data.shape[0], 256, 256, 1))
-    x = tf.placeholder(dtype='float32', name='data', shape=(data.shape[0], 256, 256, 1))
-    op = tf.image.grayscale_to_rgb(x)
-    folder, name = get_folder_and_name(path)
-    with tf.Session() as sess:
-        resized = sess.run(op, feed_dict={x: data})
-        np.save(folder + "\\" + name + output_postfix + "npy", resized)
-
-
-
-def plot_image_result(index, img_true, img_pred, title=''):
+def plot_image_result(index, img_true, img_pred, iou = None,title=''):
     fig, axs = plt.subplots(1, 2)
     fig.suptitle(title)
     axs[0].imshow(img_true, cmap='gray')
     axs[0].set(title=f'Ground truth {index}')
     axs[1].imshow(img_pred, cmap='gray')
-    axs[1].set(title=f'Pred {index}')
+    if iou!=None:
+        sess= tf.Session()
+        with sess.as_default():
+            iou = iou.eval()
+        axs[1].set(title='Pred ' + str(index) + ', IOU: ' + str(iou))
+    else:
+        axs[1].set(title=f'Pred {index}')
     plt.savefig('exp.png')
     plt.show()
 
@@ -68,13 +42,22 @@ def np_iou_thresholded(y_true, y_pred, threshold=0.5, smooth=1.):
     intersection = np.sum(y_true_f * y_pred_f)
     return (intersection + smooth) / (np.sum(y_true_f) + np.sum(y_pred_f) - intersection + smooth)
 
+def per_class_iou(y_true, y_pred, smooth=1.):
+    n_classes = y_pred.shape[3]
+    total = 0
+    for class_number in range(n_classes):
+        y_true_f = K.backend.flatten(y_true[:, :, :, class_number])
+        y_pred_f = K.backend.flatten(y_pred[:, :, :, class_number])
+        intersection = K.backend.sum(y_true_f * y_pred_f)
+        total += (intersection + smooth) / (K.backend.sum(y_true_f) + K.backend.sum(y_pred_f) - intersection + smooth)
+    return total/3
 
 def extract_statistics(y_test, y_pred, plot_examples=False, plot_best_worst=False):
     # Plotting 5 random samples, mask number k
     if plot_examples:
         selection = np.random.randint(0, y_test.shape[0], size=2)
         for i in selection:
-            plot_image_result(i, y_test[i, :, :, 1], y_pred[i, :, :, 1])
+            plot_image_result(i, y_test[i, :, :, 1], y_pred[i, :, :, 1],iou=per_class_iou(y_test[i:i+1,:,:,:],y_pred[i:i+1,:,:,:]))
 
     for metric in [np_iou, np_dice_coef, np_iou_thresholded]:
 
