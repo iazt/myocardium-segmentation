@@ -18,7 +18,7 @@ keep_training = True
 evaluate = True
 directory = r'C:\Users\Rudy\PycharmProjects\myocardium-segmentation\resources\data'
 weights_directory = r'C:\Users\Rudy\PycharmProjects\myocardium-segmentation\resources\weights'
-model_name = 'vgg-unet-i256_3-o256_3_v0'
+model_name = 'vgg-unet-i256_3-o256_1_v0'
 early_stopping = 3
 patience_lr = 1
 epochs = 100
@@ -29,7 +29,7 @@ dropout = 0.3
 if __name__ == '__main__':
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True  # dynamically grow the memory used on the GPU
-    config.log_device_placement = True  # to log device placement (on which device the operation ran)
+    config.log_device_placement = False  # to log device placement (on which device the operation ran)
     # (nothing gets printed in Jupyter, only if you run it standalone)
     sess = tf.Session(config=config)
     set_session(sess)  # set this TensorFlow session as the default session for Keras
@@ -79,7 +79,7 @@ if __name__ == '__main__':
     o = layers.Dropout(dropout)(o)
     o = layers.Conv2D(16, (3, 3), activation='relu', padding='same', data_format=IMAGE_ORDERING)(o)
     o = layers.BatchNormalization()(o)
-    o = layers.Conv2D(3, (1, 1), activation='softmax', padding='same', data_format=IMAGE_ORDERING)(o)
+    o = layers.Conv2D(1, (1, 1), activation='softmax', padding='same', data_format=IMAGE_ORDERING)(o)
 
     # Creates the final block model
     vgg_unet_model = keras.Model(img_input, o, name="VGG-UNET")
@@ -98,10 +98,12 @@ if __name__ == '__main__':
 
         # Load the data to train
         print("Loading data from {} ...".format(directory))
-        img_train_data = np.load(directory + r'\train_imgs_v256_3npy.npy').astype('float32')
-        annot_train_data = np.load(directory + r'\train_annot_v5.npy').astype('float32')
-        img_val_data = np.load(directory + r'\val_imgs_v256_3npy.npy').astype('float32')
-        annot_val_data = np.load(directory + r'\val_annot_v5.npy').astype('float32')
+        img_train_data = np.load(directory + r'\train_imgs_v256_3.npy').astype('float32')
+        annot_train_data = np.load(directory + r'\train_annot_v256_1_onehot.npy').astype('float32')
+        annot_train_data.resize((annot_train_data.shape[0], 256, 256, 1))
+        img_val_data = np.load(directory + r'\val_imgs_v256_3.npy').astype('float32')
+        annot_val_data = np.load(directory + r'\val_annot_v256_1_onehot.npy').astype('float32')
+        annot_val_data.resize((annot_val_data.shape[0], 256, 256, 1))
         print("Data loaded!")
 
         # Create useful callbacks
